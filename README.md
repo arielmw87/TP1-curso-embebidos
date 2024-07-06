@@ -1,4 +1,4 @@
-#Agitador magnetico - magnetic stirrer
+# Agitador magnetico - magnetic stirrer
 
 ## descripcion:
 El sistema consta de un motor DC acoplado a imanes que hace girar un buzo magnético dentro de

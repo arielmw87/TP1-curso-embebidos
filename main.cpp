@@ -40,7 +40,46 @@ DigitalOut led_time_2(PA_10);
 DigitalOut motor(PB_3);
 
 //instancio uart driver
-UnbufferedSerial serial_port(USBTX, USBRX);
+UnbufferedSerial serial_port(USBTX, USBRX); //seria ideal limitar el scope a una biblioteca de manejo serial
+
+
+// to do: pasar un puntero a una estructura que contenga todo el estado del aparato para poder monitorear y modificar mas libremente
+bool manage_serial(uint8_t vel, uint8_t tim){
+    bool ret = false;
+    //atiendo comandos seriales:
+    char received = 0; // '\0'
+    if( serial_port.readable() ){
+        serial_port.read( &received, 1);
+        switch(received){
+            //---------------------------------------------------------------
+            case 'A':
+                serial_port.write( "Starting stirer\r\n", 17);// estaria bueno una funcion que le pases el const char* y cuente solo los caracteres.
+                ret=true;
+            break;
+            //---------------------------------------------------------------
+            case 'S':
+                char str[30];
+                sprintf(str,"La velocidad seteada es: %d\n", vel);
+                serial_port.write( str, strlen(str) );
+
+                sprintf(str,"el tiempo seteado es: %d\n", tim);
+                serial_port.write( str, strlen(str) );
+
+                //queda por implementar medicion de temperatura, pero no deja de ser solo otro A/D
+                //sprintf(str,"La temperatura actual es %d\n", speed);
+                //serial.write( str, strlen(str) );
+            break;
+            //---------------------------------------------------------------
+            default:
+                //availableCommands();
+            break;
+            //---------------------------------------------------------------
+        }
+        
+    }
+    return ret;
+}
+
 
 int main(void)
 {
@@ -82,14 +121,16 @@ int main(void)
 
         thread_sleep_for(1); //uso de base de tiempo falopa, tambien me cambia frecuencia de pwm, polemiquisimo.
         
-        //atiendo comandos seriales:
-        if(serial_port.readable( ){
 
-            
+        if( manage_serial(speed, set_time) == true ){
+            working=true;
         }
 
+
+
+
         //leo la velocidad seteada
-        speed = speed_input * 255; // escalo a 0 a 255 para el pwm casero
+        speed = speed_input * 99; // escalo a 0 a 255 para el pwm casero
 
         //espero a que se aprete boton de start para arrancar
         if(start_button == 0 ){
@@ -115,7 +156,7 @@ int main(void)
 
             //hago control de velocidad, bastante precario, sin control de frecuencia, fase, ni nada de nada, de casualidad cambia el ancho de pulso
             static uint8_t pwm_cnt=0;
-            pwm_cnt = pwm_cnt < 255 ? pwm_cnt+1 : 0; //esto podria ser simplemente "pwm_cnt++" pero para asegurarse de que pegue la vuelta...
+            pwm_cnt = pwm_cnt < 99 ? pwm_cnt+1 : 0;
 
             motor = pwm_cnt < speed ? 0 : 1 ; //pwm :s
         }else{
